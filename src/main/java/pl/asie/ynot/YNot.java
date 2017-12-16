@@ -63,7 +63,7 @@ public class YNot {
 		if (Loader.isModLoaded("mekanism")) {
 			enableMekanismGas = config.getBoolean("mekanismGasChannel", "features", true, "Mekanism Gas Channel support for XNet");
 
-			// Mekanism's balance: 256 (gas) -> 1000 (fluid), so let's keep in with that.
+			// Mekanism's balance: 256 (gas) -> 1000 (fluid), so let's keep with that as a default.
 			maxGasRateAdvanced = config.getInt("mekanismGasMaxRateAdvanced", "balance", 256 * 5, 1, Integer.MAX_VALUE, "Maximum transfer rate for Mekanism Gas and advanced connectors");
 			maxGasRateNormal = config.getInt("mekanismGasMaxRateNormal", "balance", 256, 1, Integer.MAX_VALUE, "Maximum transfer rate for Mekanism Gas and normal connectors");
 		}

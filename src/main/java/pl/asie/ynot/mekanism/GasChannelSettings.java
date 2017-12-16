@@ -157,27 +157,29 @@ public class GasChannelSettings extends TraitedChannelSettings {
 	private void insertGasReal(IControllerContext context, List<Triple<SidedConsumer, GasConnectorSettings, Integer>> inserted, GasStack stack) {
 		int amount = stack.amount;
 		for (Triple<SidedConsumer, GasConnectorSettings, Integer> pair : inserted) {
-			BlockPos consumerPosition = context.findConsumerPosition(pair.getLeft().getConsumerId());
-			EnumFacing side = pair.getLeft().getSide();
-			GasConnectorSettings settings = pair.getMiddle();
-			GasStack filterGas = settings.getFilter();
-			if (filterGas != null && !filterGas.isGasEqual(stack)) {
-				continue;
-			}
+			BlockPos consumerPos = context.findConsumerPosition(pair.getLeft().getConsumerId());
+			if (consumerPos != null) {
+				EnumFacing side = pair.getLeft().getSide();
+				GasConnectorSettings settings = pair.getMiddle();
+				GasStack filterGas = settings.getFilter();
+				if (filterGas != null && !filterGas.isGasEqual(stack)) {
+					continue;
+				}
 
-			BlockPos pos = consumerPosition.offset(side);
-			IGasHandler handler = getGasHandler(context.getControllerWorld().getTileEntity(pos), settings.getFacing());
-			if (handler != null) {
-				int toinsert = Math.min(settings.getRate(), amount);
-				GasStack copy = stack.copy();
-				copy.amount = toinsert;
+				BlockPos pos = consumerPos.offset(side);
+				IGasHandler handler = getGasHandler(context.getControllerWorld().getTileEntity(pos), settings.getFacing());
+				if (handler != null) {
+					int toinsert = Math.min(settings.getRate(), amount);
+					GasStack copy = stack.copy();
+					copy.amount = toinsert;
 
-				int filled = handler.receiveGas(settings.getFacing(), copy, true);
-				if (filled > 0) {
-					roundRobinOffset = (pair.getRight() + 1) % gasConsumers.size();
-					amount -= filled;
-					if (amount <= 0) {
-						return;
+					int filled = handler.receiveGas(settings.getFacing(), copy, true);
+					if (filled > 0) {
+						roundRobinOffset = (pair.getRight() + 1) % gasConsumers.size();
+						amount -= filled;
+						if (amount <= 0) {
+							return;
+						}
 					}
 				}
 			}
