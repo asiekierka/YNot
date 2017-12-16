@@ -1,0 +1,15 @@
+[
+{
+  "modid": "ynot",
+  "name": "YNot",
+  "description": "Compatibility add-ons for XNet? YNot!",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "http://asie.pl/",
+  "updateUrl": "http://asie.pl/files/minecraft/update/ynot.json",
+  "authorList": ["asie"],
+  "credits": "McJty for XNet",
+  "logoFile": "",
+  "screenshots": []
+}
+]
