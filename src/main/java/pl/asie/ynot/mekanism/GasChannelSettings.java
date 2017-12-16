@@ -83,7 +83,7 @@ public class GasChannelSettings extends TraitedChannelSettings {
 	public static @Nullable IGasHandler getGasHandler(TileEntity tile, EnumFacing facing) {
 		if (tile instanceof IGasHandler) {
 			return (IGasHandler) tile;
-		} else if (tile.hasCapability(GAS_HANDLER_CAPABILITY, facing)) {
+		} else if (tile != null && tile.hasCapability(GAS_HANDLER_CAPABILITY, facing)) {
 			return tile.getCapability(GAS_HANDLER_CAPABILITY, facing);
 		} else {
 			return null;

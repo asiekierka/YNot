@@ -22,10 +22,12 @@ package pl.asie.ynot;
 import mcjty.xnet.XNet;
 import mcjty.xnet.api.IXNet;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLInterModComms;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import pl.asie.ynot.mekanism.GasChannelType;
 
 import java.util.function.Function;
@@ -39,11 +41,15 @@ import java.util.function.Function;
 )
 public class YNot {
 	public static final ResourceLocation iconGui = new ResourceLocation("ynot", "textures/gui/gui.png");
+	private static Configuration config;
 
-	public static class XNetGetter implements Function<IXNet, Void> {
+	public static int maxGasRateAdvanced, maxGasRateNormal;
+	private static boolean enableMekanismGas;
+
+	public static class XNetHook implements Function<IXNet, Void> {
 		@Override
 		public Void apply(IXNet xNet) {
-			if (Loader.isModLoaded("mekanism")) {
+			if (enableMekanismGas) {
 				xNet.registerChannelType(new GasChannelType());
 			}
 			return null;
@@ -51,7 +57,24 @@ public class YNot {
 	}
 
 	@Mod.EventHandler
+	public void onPreInit(FMLPreInitializationEvent event) {
+		config = new Configuration(event.getSuggestedConfigurationFile());
+
+		if (Loader.isModLoaded("mekanism")) {
+			enableMekanismGas = config.getBoolean("mekanismGasChannel", "features", true, "Mekanism Gas Channel support for XNet");
+
+			// Mekanism's balance: 256 (gas) -> 1000 (fluid), so let's keep in with that.
+			maxGasRateAdvanced = config.getInt("mekanismGasMaxRateAdvanced", "balance", 256 * 5, 1, Integer.MAX_VALUE, "Maximum transfer rate for Mekanism Gas and advanced connectors");
+			maxGasRateNormal = config.getInt("mekanismGasMaxRateNormal", "balance", 256, 1, Integer.MAX_VALUE, "Maximum transfer rate for Mekanism Gas and normal connectors");
+		}
+
+		if (config.hasChanged()) {
+			config.save();
+		}
+	}
+
+	@Mod.EventHandler
 	public void onInit(FMLInitializationEvent event) {
-		FMLInterModComms.sendFunctionMessage("xnet", "getXNet", "pl.asie.ynot.YNot$XNetGetter");
+		FMLInterModComms.sendFunctionMessage("xnet", "getXNet", "pl.asie.ynot.YNot$XNetHook");
 	}
 }

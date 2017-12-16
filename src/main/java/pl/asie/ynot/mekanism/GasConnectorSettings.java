@@ -28,6 +28,7 @@ import mekanism.api.gas.GasStack;
 import mekanism.api.gas.IGasItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
+import pl.asie.ynot.YNot;
 import pl.asie.ynot.enums.InsertionMode;
 import pl.asie.ynot.traits.*;
 
@@ -55,7 +56,7 @@ public class GasConnectorSettings extends TraitedConnectorSettings {
 			@Override
 			public void update(Map<String, Object> data) {
 				super.update(data);
-				int maxRate = advanced ? GeneralConfiguration.maxFluidRateAdvanced : GeneralConfiguration.maxFluidRateNormal;
+				int maxRate = advanced ? YNot.maxGasRateAdvanced : YNot.maxGasRateNormal;
 				if (val != null && val > maxRate) {
 					val = maxRate;
 				}
@@ -65,7 +66,7 @@ public class GasConnectorSettings extends TraitedConnectorSettings {
 	}
 
 	public int getRate() {
-		return rate.get() != null ? rate.get() : GeneralConfiguration.maxFluidRateNormal;
+		return rate.get() != null ? rate.get() : YNot.maxGasRateNormal;
 	}
 
 	private void updateTraits() {
@@ -120,7 +121,7 @@ public class GasConnectorSettings extends TraitedConnectorSettings {
 	public void createGui(IEditorGui gui) {
 		advanced = gui.isAdvanced();
 		updateTraits();
-		int maxRate = advanced ? GeneralConfiguration.maxFluidRateAdvanced : GeneralConfiguration.maxFluidRateNormal;
+		int maxRate = advanced ? YNot.maxGasRateAdvanced : YNot.maxGasRateNormal;
 
 		sideGui(gui);
 		colorsGui(gui);
