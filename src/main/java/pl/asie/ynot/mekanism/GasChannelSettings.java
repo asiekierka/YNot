@@ -66,20 +66,6 @@ public class GasChannelSettings extends TraitedChannelSettings {
 		register(transferMode = new TraitEnum<>("mode", LiquidTransferMode.class, LiquidTransferMode.DISTRIBUTE));
 	}
 
-	private boolean shouldCheck(IControllerContext context, BlockPos pos, GasConnectorSettings settings) {
-		World world = context.getControllerWorld();
-		if (!WorldTools.chunkLoaded(world, pos)) {
-			return false;
-		}
-		if (checkRedstone(world, settings, pos)) {
-			return false;
-		}
-		if (!context.matchColor(settings.getColorsMask())) {
-			return false;
-		}
-		return true;
-	}
-
 	public static @Nullable IGasHandler getGasHandler(TileEntity tile, EnumFacing facing) {
 		if (tile instanceof IGasHandler) {
 			return (IGasHandler) tile;

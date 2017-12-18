@@ -90,9 +90,9 @@ public class GasConnectorSettings extends TraitedConnectorSettings {
 			case INS:
 				return new IndicatorIcon(GuiController.iconGuiElements, 0, 70, 13, 10);
 			case EXT:
+			default:
 				return new IndicatorIcon(GuiController.iconGuiElements, 13, 70, 13, 10);
 		}
-		return null;
 	}
 
 	@Nullable

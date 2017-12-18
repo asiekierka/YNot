@@ -19,9 +19,15 @@
 
 package pl.asie.ynot.traits;
 
+import mcjty.lib.varia.WorldTools;
 import mcjty.xnet.api.channels.IChannelSettings;
+import mcjty.xnet.api.channels.IControllerContext;
+import mcjty.xnet.api.helper.AbstractConnectorSettings;
 import mcjty.xnet.api.helper.DefaultChannelSettings;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import pl.asie.ynot.mekanism.GasConnectorSettings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,5 +63,19 @@ public abstract class TraitedChannelSettings extends DefaultChannelSettings impl
 		for (Trait t : getTraits()) {
 			t.update(data);
 		}
+	}
+
+	protected boolean shouldCheck(IControllerContext context, BlockPos pos, AbstractConnectorSettings settings) {
+		World world = context.getControllerWorld();
+		if (!WorldTools.chunkLoaded(world, pos)) {
+			return false;
+		}
+		if (checkRedstone(world, settings, pos)) {
+			return false;
+		}
+		if (!context.matchColor(settings.getColorsMask())) {
+			return false;
+		}
+		return true;
 	}
 }

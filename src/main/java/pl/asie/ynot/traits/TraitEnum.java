@@ -26,17 +26,23 @@ import java.util.Map;
 
 public class TraitEnum<T extends Enum> extends Trait<T> {
 	private final Class<T> tClass;
-	private T mode;
+	private T mode, defaultValue;
 
 	public TraitEnum(String tag, Class<T> tClass, T defaultValue) {
 		super(tag);
 		this.tClass = tClass;
 		this.mode = defaultValue;
+		this.defaultValue = defaultValue;
 	}
 
 	@Override
 	public void readFromNBT(NBTTagCompound cpt) {
-		mode = tClass.getEnumConstants()[cpt.getByte(tag)];
+		byte b = cpt.getByte(tag);
+		if (tClass.getEnumConstants().length > b) {
+			mode = tClass.getEnumConstants()[b];
+		} else {
+			mode = defaultValue;
+		}
 	}
 
 	@Override

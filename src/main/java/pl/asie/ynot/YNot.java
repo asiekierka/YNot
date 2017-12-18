@@ -19,17 +19,31 @@
 
 package pl.asie.ynot;
 
+import com.reddit.user.koppeh.flamingo.TileEntityFlamingo;
 import mcjty.xnet.XNet;
 import mcjty.xnet.api.IXNet;
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLInterModComms;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
+import pl.asie.ynot.flamingo.FlamingoChannelType;
 import pl.asie.ynot.mekanism.GasChannelType;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.function.Function;
 
 @Mod(
@@ -44,7 +58,7 @@ public class YNot {
 	private static Configuration config;
 
 	public static int maxGasRateAdvanced, maxGasRateNormal;
-	private static boolean enableMekanismGas;
+	private static boolean enableMekanismGas, enableWiggles;
 
 	public static class XNetHook implements Function<IXNet, Void> {
 		@Override
@@ -52,6 +66,11 @@ public class YNot {
 			if (enableMekanismGas) {
 				xNet.registerChannelType(new GasChannelType());
 			}
+
+			if (enableWiggles) {
+				xNet.registerChannelType(new FlamingoChannelType());
+			}
+
 			return null;
 		}
 	}
@@ -68,13 +87,39 @@ public class YNot {
 			maxGasRateNormal = config.getInt("mekanismGasMaxRateNormal", "balance", 256, 1, Integer.MAX_VALUE, "Maximum transfer rate for Mekanism Gas and normal connectors");
 		}
 
+		if (Loader.isModLoaded("flamingo")) {
+			enableWiggles = config.getBoolean("flamingoWiggles", "features", true, "Don't question it.");
+		}
+
 		if (config.hasChanged()) {
 			config.save();
 		}
 	}
 
+	@SubscribeEvent
+	public void onAttachCapabilities(AttachCapabilitiesEvent<TileEntity> event) {
+		// Vexatos will destroy whatever is left of my soul after I'm done with this
+		if (event.getObject() instanceof TileEntityFlamingo) {
+			event.addCapability(new ResourceLocation("flamingo:inventory_of_lies"), new ICapabilityProvider() {
+				@Override
+				public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
+					return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && facing == null;
+				}
+
+				@Nullable
+				@Override
+				public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
+					return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && facing == null
+							? CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.getDefaultInstance())
+							: null; // ^ "Forge was a mistake"
+				}
+			});
+		}
+	}
+
 	@Mod.EventHandler
 	public void onInit(FMLInitializationEvent event) {
+		MinecraftForge.EVENT_BUS.register(this);
 		FMLInterModComms.sendFunctionMessage("xnet", "getXNet", "pl.asie.ynot.YNot$XNetHook");
 	}
 }
