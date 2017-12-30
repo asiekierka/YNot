@@ -41,6 +41,7 @@ import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import pl.asie.ynot.flamingo.FlamingoChannelType;
 import pl.asie.ynot.mekanism.GasChannelType;
+import pl.asie.ynot.oc.OCChannelType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -58,7 +59,7 @@ public class YNot {
 	private static Configuration config;
 
 	public static int maxGasRateAdvanced, maxGasRateNormal;
-	private static boolean enableMekanismGas, enableWiggles;
+	private static boolean enableMekanismGas, enableWiggles, enableOC;
 
 	public static class XNetHook implements Function<IXNet, Void> {
 		@Override
@@ -69,6 +70,10 @@ public class YNot {
 
 			if (enableWiggles) {
 				xNet.registerChannelType(new FlamingoChannelType());
+			}
+
+			if (enableOC) {
+				xNet.registerChannelType(new OCChannelType());
 			}
 
 			return null;
@@ -89,6 +94,10 @@ public class YNot {
 
 		if (Loader.isModLoaded("flamingo")) {
 			enableWiggles = config.getBoolean("flamingoWiggles", "features", true, "Don't question it.");
+		}
+
+		if (Loader.isModLoaded("opencomputers")) {
+			enableOC = config.getBoolean("opencomputersCable", "features", true, "Adds the ability to send network messages and use components.");
 		}
 
 		if (config.hasChanged()) {
