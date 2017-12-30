@@ -12,7 +12,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class OCChannelType implements IChannelType {
-
     @Override
     public String getID() {
         return "ynot.opencomputers";
@@ -25,7 +24,7 @@ public class OCChannelType implements IChannelType {
 
     @Override
     public boolean supportsBlock(@Nonnull World world, @Nonnull BlockPos pos, @Nullable EnumFacing side) {
-        return world.getTileEntity(pos) instanceof Environment;
+        return world.getTileEntity(pos.offset(side)) instanceof Environment;
     }
 
     @Nonnull

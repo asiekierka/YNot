@@ -72,7 +72,7 @@ public class YNot {
 				xNet.registerChannelType(new FlamingoChannelType());
 			}
 
-			if (enableOC)
+			if (enableOC) {
 				xNet.registerChannelType(new OCChannelType());
 			}
 
@@ -97,7 +97,7 @@ public class YNot {
 		}
 
 		if (Loader.isModLoaded("opencomputers")) {
-			enableOC = config.getBoolean("opencomputersCable", "features", true, "Adds the ability to send network messages and use components.")
+			enableOC = config.getBoolean("opencomputersCable", "features", true, "Adds the ability to send network messages and use components.");
 		}
 
 		if (config.hasChanged()) {

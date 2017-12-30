@@ -12,6 +12,9 @@ import mcjty.xnet.api.gui.IEditorGui;
 import mcjty.xnet.api.gui.IndicatorIcon;
 import mcjty.xnet.api.keys.SidedConsumer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import pl.asie.ynot.YNot;
 import pl.asie.ynot.traits.TraitedChannelSettings;
 
 import javax.annotation.Nullable;
@@ -21,11 +24,11 @@ import java.util.Set;
 
 public class OCChannelSettings extends TraitedChannelSettings {
     Node channelNode;
-    Set<Node> cachedNodes = null;
+    Set<Node> cachedNodes;
 
     class DummyEnvironment extends AbstractManagedEnvironment {
         DummyEnvironment() {
-            this.setNode(Network.newNode(this, Visibility.Neighbors).create());
+            this.setNode(Network.newNode(this, Visibility.Network).create());
         }
     }
 
@@ -36,18 +39,28 @@ public class OCChannelSettings extends TraitedChannelSettings {
         cachedNodes = null;
     }
 
+    private Environment getEnvironment(World world, BlockPos pos) {
+        if(world.getTileEntity(pos) instanceof Environment) {
+            return (Environment) world.getTileEntity(pos);
+        } else {
+            return null;
+        }
+    }
+
     @Override
     public void tick(int channel, IControllerContext context) {
         if(cachedNodes != null) { return; }
         cachedNodes = new HashSet<>();
 
+        World world = context.getControllerWorld();
         Map<SidedConsumer, IConnectorSettings> connectors = context.getConnectors(channel);
         for (Map.Entry<SidedConsumer, IConnectorSettings> entry : connectors.entrySet()) {
             OCConnectorSettings settings = (OCConnectorSettings) entry.getValue();
-            Environment env = (Environment)
-                    context.getControllerWorld()
-                        .getTileEntity(context.findConsumerPosition(entry.getKey().getConsumerId())
-                            .add(entry.getKey().getSide().getDirectionVec()));
+
+            BlockPos pos = context.findConsumerPosition(entry.getKey().getConsumerId());
+            pos = pos.offset(entry.getKey().getSide());
+
+            Environment env = getEnvironment(world, pos);
 
             if(env == null) { continue; }
             if(env.node() != null && !env.node().isNeighborOf(channelNode)) {
@@ -76,7 +89,7 @@ public class OCChannelSettings extends TraitedChannelSettings {
     @Nullable
     @Override
     public IndicatorIcon getIndicatorIcon() {
-        return null;
+        return new IndicatorIcon(YNot.iconGui, 11, 0, 11, 10);
     }
 
     @Nullable
@@ -87,7 +100,7 @@ public class OCChannelSettings extends TraitedChannelSettings {
 
     @Override
     public boolean isEnabled(String tag) {
-        return false;
+        return true;
     }
 
     @Override
