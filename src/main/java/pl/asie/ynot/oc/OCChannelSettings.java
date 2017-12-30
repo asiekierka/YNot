@@ -68,6 +68,23 @@ public class OCChannelSettings extends TraitedChannelSettings {
                 cachedNodes.add(env.node());
             }
         }
+
+        connectors = context.getRoutedConnectors(channel);
+        for (Map.Entry<SidedConsumer, IConnectorSettings> entry : connectors.entrySet()) {
+            OCConnectorSettings settings = (OCConnectorSettings) entry.getValue();
+
+            BlockPos pos = context.findConsumerPosition(entry.getKey().getConsumerId());
+            pos = pos.offset(entry.getKey().getSide());
+
+            Environment env = getEnvironment(world, pos);
+
+            if(env == null) { continue; }
+            if(env.node() != null && !env.node().isNeighborOf(channelNode)) {
+                env.node().connect(channelNode);
+                cachedNodes.add(env.node());
+            }
+        }
+
     }
 
     @Override
