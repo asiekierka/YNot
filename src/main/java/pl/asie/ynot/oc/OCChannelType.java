@@ -1,6 +1,7 @@
 package pl.asie.ynot.oc;
 
 import li.cil.oc.api.network.Environment;
+import li.cil.oc.api.network.SidedEnvironment;
 import mcjty.xnet.api.channels.IChannelSettings;
 import mcjty.xnet.api.channels.IChannelType;
 import mcjty.xnet.api.channels.IConnectorSettings;
@@ -24,7 +25,8 @@ public class OCChannelType implements IChannelType {
 
     @Override
     public boolean supportsBlock(@Nonnull World world, @Nonnull BlockPos pos, @Nullable EnumFacing side) {
-        return world.getTileEntity(pos.offset(side)) instanceof Environment;
+        return world.getTileEntity(pos.offset(side)) instanceof Environment
+                || world.getTileEntity(pos.offset(side)) instanceof SidedEnvironment;
     }
 
     @Nonnull

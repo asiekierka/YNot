@@ -1,16 +1,14 @@
 package pl.asie.ynot.oc;
 
 import li.cil.oc.api.Network;
-import li.cil.oc.api.network.Environment;
-import li.cil.oc.api.network.Message;
-import li.cil.oc.api.network.Node;
-import li.cil.oc.api.network.Visibility;
+import li.cil.oc.api.network.*;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
 import mcjty.xnet.api.channels.IConnectorSettings;
 import mcjty.xnet.api.channels.IControllerContext;
 import mcjty.xnet.api.gui.IEditorGui;
 import mcjty.xnet.api.gui.IndicatorIcon;
 import mcjty.xnet.api.keys.SidedConsumer;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import pl.asie.ynot.YNot;
@@ -53,9 +51,11 @@ public class OCChannelSettings extends TraitedChannelSettings {
         componentNodes = null;
     }
 
-    private Environment getEnvironment(World world, BlockPos pos) {
-        if(world.getTileEntity(pos) instanceof Environment) {
-            return (Environment) world.getTileEntity(pos);
+    private Node getNode(World world, BlockPos pos, EnumFacing side) {
+        if (world.getTileEntity(pos) instanceof SidedEnvironment) {
+            return ((SidedEnvironment) world.getTileEntity(pos)).sidedNode(side.getOpposite());
+        } else if(world.getTileEntity(pos) instanceof Environment) {
+            return ((Environment) world.getTileEntity(pos)).node();
         } else {
             return null;
         }
@@ -76,20 +76,20 @@ public class OCChannelSettings extends TraitedChannelSettings {
         for (Map.Entry<SidedConsumer, IConnectorSettings> entry : connectors.entrySet()) {
             OCConnectorSettings settings = (OCConnectorSettings) entry.getValue();
 
+            EnumFacing side = entry.getKey().getSide();
             BlockPos pos = context.findConsumerPosition(entry.getKey().getConsumerId());
-            pos = pos.offset(entry.getKey().getSide());
+            pos = pos.offset(side);
 
-            Environment env = getEnvironment(world, pos);
+            Node node = getNode(world, pos, side);
 
-            if(env == null || env.node() == null) { continue; }
-
+            if(node == null) { continue; }
             if(settings.networkMode.get() == OCNetworkMode.COMPONENT_AND_NETWORK) {
-                if (!env.node().isNeighborOf(channelNode)) {
-                    env.node().connect(channelNode);
-                    componentNodes.add(env.node());
+                if (!node.isNeighborOf(channelNode)) {
+                    node.connect(channelNode);
+                    componentNodes.add(node);
                 }
             } else {
-                networkNodes.add(env.node());
+                networkNodes.add(node);
             }
         }
     }

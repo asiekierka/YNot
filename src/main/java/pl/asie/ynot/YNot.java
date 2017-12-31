@@ -33,6 +33,7 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLInterModComms;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -107,22 +108,24 @@ public class YNot {
 
 	@SubscribeEvent
 	public void onAttachCapabilities(AttachCapabilitiesEvent<TileEntity> event) {
-		// Vexatos will destroy whatever is left of my soul after I'm done with this
-		if (event.getObject() instanceof TileEntityFlamingo) {
-			event.addCapability(new ResourceLocation("flamingo:inventory_of_lies"), new ICapabilityProvider() {
-				@Override
-				public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
-					return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && facing == null;
-				}
+		if (enableWiggles) {
+			// Vexatos will destroy whatever is left of my soul after I'm done with this
+			if (event.getObject() instanceof TileEntityFlamingo) {
+				event.addCapability(new ResourceLocation("flamingo:inventory_of_lies"), new ICapabilityProvider() {
+					@Override
+					public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
+						return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && facing == null;
+					}
 
-				@Nullable
-				@Override
-				public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
-					return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && facing == null
-							? CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.getDefaultInstance())
-							: null; // ^ "Forge was a mistake"
-				}
-			});
+					@Nullable
+					@Override
+					public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
+						return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && facing == null
+								? CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.getDefaultInstance())
+								: null; // ^ "Forge was a mistake"
+					}
+				});
+			}
 		}
 	}
 
