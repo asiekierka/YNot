@@ -4,6 +4,7 @@ import li.cil.oc.api.network.Environment;
 import mcjty.xnet.api.channels.IControllerContext;
 import mcjty.xnet.api.gui.IEditorGui;
 import mcjty.xnet.api.gui.IndicatorIcon;
+import mcjty.xnet.blocks.controller.gui.GuiController;
 import net.minecraft.util.EnumFacing;
 import pl.asie.ynot.YNot;
 import pl.asie.ynot.enums.OCNetworkMode;
@@ -24,7 +25,13 @@ public class OCConnectorSettings extends TraitedConnectorSettings {
     @Nullable
     @Override
     public IndicatorIcon getIndicatorIcon() {
-        return new IndicatorIcon(YNot.iconGui, 11, 0, 11, 10);
+        switch (networkMode.get()) {
+            case COMPONENT_AND_NETWORK:
+                return new IndicatorIcon(YNot.iconGui, 26, 10, 13, 10);
+            case NETWORK_ONLY:
+            default:
+                return new IndicatorIcon(YNot.iconGui, 13, 10, 13, 10);
+        }
     }
 
     @Nullable
@@ -37,7 +44,6 @@ public class OCConnectorSettings extends TraitedConnectorSettings {
     public boolean isEnabled(String tag) {
         return true;
     }
-
 
     @Override
     public void createGui(IEditorGui gui) {

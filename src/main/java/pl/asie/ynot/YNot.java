@@ -20,14 +20,19 @@
 package pl.asie.ynot;
 
 import com.reddit.user.koppeh.flamingo.TileEntityFlamingo;
+import li.cil.oc.api.network.Environment;
+import li.cil.oc.api.network.SidedEnvironment;
 import mcjty.xnet.XNet;
 import mcjty.xnet.api.IXNet;
+import mcjty.xnet.api.channels.IConnectable;
+import mekanism.api.gas.IGasHandler;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
@@ -52,7 +57,7 @@ import java.util.function.Function;
 		modid = "ynot",
 		name = "YNot",
 		version = "@VERSION@",
-		dependencies = "required-after:xnet@[1.5.0,)",
+		dependencies = "required-after:xnet@[1.6.4,)",
 		updateJSON = "http://asie.pl/files/minecraft/update/ynot.json"
 )
 public class YNot {
@@ -62,19 +67,42 @@ public class YNot {
 	public static int maxGasRateAdvanced, maxGasRateNormal;
 	private static boolean enableMekanismGas, enableWiggles, enableOC;
 
+	@CapabilityInject(IGasHandler.class)
+	private static Capability<IGasHandler> capMekGasHandler;
+	@CapabilityInject(Environment.class)
+	private static Capability<Environment> capOCEnv;
+	@CapabilityInject(SidedEnvironment.class)
+	private static Capability<SidedEnvironment> capOCSidedEnv;
+
 	public static class XNetHook implements Function<IXNet, Void> {
 		@Override
 		public Void apply(IXNet xNet) {
+			boolean needsCustomConnections = false;
+
 			if (enableMekanismGas) {
 				xNet.registerChannelType(new GasChannelType());
-			}
-
-			if (enableWiggles) {
-				xNet.registerChannelType(new FlamingoChannelType());
+				YNotConnectable.add(capMekGasHandler);
+				YNotConnectable.add(capMekGasHandler.getClass());
+				needsCustomConnections = true;
 			}
 
 			if (enableOC) {
 				xNet.registerChannelType(new OCChannelType());
+				YNotConnectable.add(capOCEnv, capOCSidedEnv);
+				YNotConnectable.add(capOCEnv.getClass(), capOCSidedEnv.getClass());
+				needsCustomConnections = true;
+			}
+
+			if (needsCustomConnections) {
+				YNotConnectable.register(xNet);
+			}
+
+			// Has to run after YNotConnectable.register until XNet allows registering more than one connectable
+			// per block ID
+			if (enableWiggles) {
+				FlamingoChannelType type = new FlamingoChannelType();
+				xNet.registerChannelType(type);
+				xNet.registerConnectable(new ResourceLocation("flamingo:flamingo.flamingo"), type);
 			}
 
 			return null;
@@ -103,29 +131,6 @@ public class YNot {
 
 		if (config.hasChanged()) {
 			config.save();
-		}
-	}
-
-	@SubscribeEvent
-	public void onAttachCapabilities(AttachCapabilitiesEvent<TileEntity> event) {
-		if (enableWiggles) {
-			// Vexatos will destroy whatever is left of my soul after I'm done with this
-			if (event.getObject() instanceof TileEntityFlamingo) {
-				event.addCapability(new ResourceLocation("flamingo:inventory_of_lies"), new ICapabilityProvider() {
-					@Override
-					public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
-						return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && facing == null;
-					}
-
-					@Nullable
-					@Override
-					public <T> T getCapability(@Nonnull Capability<T> capability, @Nullable EnumFacing facing) {
-						return capability == CapabilityItemHandler.ITEM_HANDLER_CAPABILITY && facing == null
-								? CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.getDefaultInstance())
-								: null; // ^ "Forge was a mistake"
-					}
-				});
-			}
 		}
 	}
 

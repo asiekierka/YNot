@@ -56,7 +56,7 @@ public class TraitEnum<T extends Enum> extends Trait<T> {
 		if (data.containsKey(tag)) {
 			String s = ((String) data.get(tag)).toUpperCase();
 			for (Enum e : tClass.getEnumConstants()) {
-				if (s.equals(e.name())) {
+				if (s.equals(e.toString().toUpperCase())) {
 					mode = (T) e;
 				}
 			}

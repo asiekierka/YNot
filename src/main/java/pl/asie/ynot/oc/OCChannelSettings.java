@@ -114,7 +114,7 @@ public class OCChannelSettings extends TraitedChannelSettings {
     @Nullable
     @Override
     public IndicatorIcon getIndicatorIcon() {
-        return new IndicatorIcon(YNot.iconGui, 11, 0, 11, 10);
+        return new IndicatorIcon(YNot.iconGui, 22, 0, 11, 10);
     }
 
     @Nullable
