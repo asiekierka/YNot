@@ -8,9 +8,12 @@ import mcjty.xnet.api.channels.IControllerContext;
 import mcjty.xnet.api.gui.IEditorGui;
 import mcjty.xnet.api.gui.IndicatorIcon;
 import mcjty.xnet.api.keys.SidedConsumer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.CapabilityInject;
 import pl.asie.ynot.YNot;
 import pl.asie.ynot.enums.OCNetworkMode;
 import pl.asie.ynot.traits.TraitedChannelSettings;
@@ -21,6 +24,12 @@ import java.util.Map;
 import java.util.Set;
 
 public class OCChannelSettings extends TraitedChannelSettings {
+    @CapabilityInject(Environment.class)
+    private static Capability<Environment> ENVIRONMENT_CAPABILITY;
+
+    @CapabilityInject(SidedEnvironment.class)
+    private static Capability<SidedEnvironment> SIDED_ENVIRONMENT_CAPABILITY;
+
     Node channelNode;
     Set<Node> componentNodes;
     Set<Node> networkNodes;
@@ -52,10 +61,15 @@ public class OCChannelSettings extends TraitedChannelSettings {
     }
 
     private Node getNode(World world, BlockPos pos, EnumFacing side) {
-        if (world.getTileEntity(pos) instanceof SidedEnvironment) {
-            return ((SidedEnvironment) world.getTileEntity(pos)).sidedNode(side.getOpposite());
-        } else if(world.getTileEntity(pos) instanceof Environment) {
-            return ((Environment) world.getTileEntity(pos)).node();
+        TileEntity tile = world.getTileEntity(pos);
+        if(tile == null) {
+            return null;
+        }
+
+        if (tile.hasCapability(SIDED_ENVIRONMENT_CAPABILITY, side)) {
+            return tile.getCapability(SIDED_ENVIRONMENT_CAPABILITY, side).sidedNode(side.getOpposite());
+        } else if (tile.hasCapability(ENVIRONMENT_CAPABILITY, side)) {
+            return tile.getCapability(ENVIRONMENT_CAPABILITY, side).node();
         } else {
             return null;
         }

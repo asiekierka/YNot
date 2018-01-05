@@ -16,6 +16,7 @@ import javax.annotation.Nullable;
 public class OCConnectorSettings extends TraitedConnectorSettings {
     TraitEnum<OCNetworkMode> networkMode;
 
+
     OCConnectorSettings(EnumFacing side) {
         super(side);
 
