@@ -20,6 +20,7 @@
 package pl.asie.ynot.flamingo;
 
 import com.reddit.user.koppeh.flamingo.BlockFlamingo;
+import com.reddit.user.koppeh.flamingo.TileEntityFlamingo;
 import mcjty.xnet.api.channels.IChannelSettings;
 import mcjty.xnet.api.channels.IChannelType;
 import mcjty.xnet.api.channels.IConnectable;
@@ -27,6 +28,7 @@ import mcjty.xnet.api.channels.IConnectorSettings;
 import net.minecraft.block.Block;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -65,7 +67,7 @@ public class FlamingoChannelType implements IChannelType, IConnectable {
 	}
 
 	@Override
-	public ConnectResult canConnect(@Nonnull IBlockAccess access, @Nonnull BlockPos connectorPos, @Nonnull BlockPos blockPos, @Nonnull EnumFacing facting) {
-		return ConnectResult.YES;
+	public ConnectResult canConnect(@Nonnull IBlockAccess access, @Nonnull BlockPos connectorPos, @Nonnull BlockPos blockPos, @Nullable TileEntity tileEntity, @Nonnull EnumFacing facing) {
+		return tileEntity instanceof TileEntityFlamingo ? ConnectResult.YES : ConnectResult.DEFAULT;
 	}
 }

@@ -57,7 +57,7 @@ import java.util.function.Function;
 		modid = "ynot",
 		name = "YNot",
 		version = "@VERSION@",
-		dependencies = "required-after:xnet@[1.6.4,)",
+		dependencies = "required-after:xnet@[1.6.6,)",
 		updateJSON = "http://asie.pl/files/minecraft/update/ynot.json"
 )
 public class YNot {
@@ -86,6 +86,12 @@ public class YNot {
 				needsCustomConnections = true;
 			}
 
+			if (enableWiggles) {
+				FlamingoChannelType type = new FlamingoChannelType();
+				xNet.registerChannelType(type);
+				xNet.registerConnectable(type);
+			}
+
 			if (enableOC) {
 				xNet.registerChannelType(new OCChannelType());
 				YNotConnectable.add(capOCEnv, capOCSidedEnv);
@@ -94,15 +100,7 @@ public class YNot {
 			}
 
 			if (needsCustomConnections) {
-				YNotConnectable.register(xNet);
-			}
-
-			// Has to run after YNotConnectable.register until XNet allows registering more than one connectable
-			// per block ID
-			if (enableWiggles) {
-				FlamingoChannelType type = new FlamingoChannelType();
-				xNet.registerChannelType(type);
-				xNet.registerConnectable(new ResourceLocation("flamingo:flamingo.flamingo"), type);
+				xNet.registerConnectable(YNotConnectable.INSTANCE);
 			}
 
 			return null;
