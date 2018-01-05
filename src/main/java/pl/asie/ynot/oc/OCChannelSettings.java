@@ -86,7 +86,7 @@ public class OCChannelSettings extends TraitedChannelSettings {
         }
 
         if (tile.hasCapability(SIDED_ENVIRONMENT_CAPABILITY, side)) {
-            return tile.getCapability(SIDED_ENVIRONMENT_CAPABILITY, side).sidedNode(side.getOpposite());
+            return tile.getCapability(SIDED_ENVIRONMENT_CAPABILITY, side).sidedNode(side);
         } else if (tile.hasCapability(ENVIRONMENT_CAPABILITY, side)) {
             return tile.getCapability(ENVIRONMENT_CAPABILITY, side).node();
         } else {
@@ -109,9 +109,9 @@ public class OCChannelSettings extends TraitedChannelSettings {
         for (Map.Entry<SidedConsumer, IConnectorSettings> entry : connectors.entrySet()) {
             OCConnectorSettings settings = (OCConnectorSettings) entry.getValue();
 
-            EnumFacing side = entry.getKey().getSide();
+            EnumFacing side = settings.getFacing();
             BlockPos pos = context.findConsumerPosition(entry.getKey().getConsumerId());
-            pos = pos.offset(side);
+            pos = pos.offset(entry.getKey().getSide());
 
             Node node = getNode(world, pos, side);
 
