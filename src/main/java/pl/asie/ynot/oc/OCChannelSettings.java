@@ -22,6 +22,7 @@ package pl.asie.ynot.oc;
 import li.cil.oc.api.Network;
 import li.cil.oc.api.network.*;
 import li.cil.oc.api.prefab.AbstractManagedEnvironment;
+import mcjty.lib.varia.WorldTools;
 import mcjty.xnet.api.channels.IConnectorSettings;
 import mcjty.xnet.api.channels.IControllerContext;
 import mcjty.xnet.api.gui.IEditorGui;
@@ -30,6 +31,7 @@ import mcjty.xnet.api.keys.SidedConsumer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
@@ -38,11 +40,61 @@ import pl.asie.ynot.enums.OCNetworkMode;
 import pl.asie.ynot.traits.TraitedChannelSettings;
 
 import javax.annotation.Nullable;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class OCChannelSettings extends TraitedChannelSettings {
+    public class NodeEntry {
+        private final OCConnectorSettings settings;
+        private final BlockPos pos;
+        private final EnumFacing facing;
+        private final OCNetworkMode mode;
+        private TileEntity tile;
+        private Node node;
+
+        public NodeEntry(OCConnectorSettings settings, BlockPos pos, EnumFacing facing, OCNetworkMode mode) {
+            this.settings = settings;
+            this.pos = pos;
+            this.facing = facing;
+            this.mode = mode;
+        }
+
+        public void remove() {
+            if (node != null) {
+                if (mode.hasComponent()) {
+                    node.disconnect(channelNode);
+                }
+
+                tile = null;
+                node = null;
+            }
+        }
+
+        public void update(World world, IControllerContext context, int ticker) {
+            if (node != null) {
+                if (!context.matchColor(settings.getColorsMask()) || (tile != null && tile.isInvalid())) {
+                    remove();
+                }
+            }
+
+            if (tile == null && ticker == 0) {
+                if (WorldTools.chunkLoaded(world, pos) && context.matchColor(settings.getColorsMask())) {
+                    TileEntity tile = world.getTileEntity(pos);
+                    Node node = getNode(tile, facing);
+                    if (node != null) {
+                        this.tile = tile;
+                        this.node = node;
+
+                        if (mode.hasComponent()) {
+                            if (!node.isNeighborOf(channelNode)) {
+                                node.connect(channelNode);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     @CapabilityInject(Environment.class)
     private static Capability<Environment> ENVIRONMENT_CAPABILITY;
 
@@ -50,8 +102,9 @@ public class OCChannelSettings extends TraitedChannelSettings {
     private static Capability<SidedEnvironment> SIDED_ENVIRONMENT_CAPABILITY;
 
     Node channelNode;
-    Set<Node> componentNodes;
-    Set<Node> networkNodes;
+    List<NodeEntry> componentNodes;
+    List<NodeEntry> networkNodes;
+    int ticker;
 
     class DummyEnvironment extends AbstractManagedEnvironment {
         DummyEnvironment() {
@@ -62,11 +115,13 @@ public class OCChannelSettings extends TraitedChannelSettings {
         public void onMessage(Message message) {
             super.onMessage(message);
 
-            if(networkNodes == null) { return; }
-
-            if(message.name().equals("network.message")) {
-                for(Node node : networkNodes) {
-                    node.sendToAddress("network.message", node.address(), message.data());
+            if(networkNodes != null) {
+                if (message.name().equals("network.message")) {
+                    for (NodeEntry node : networkNodes) {
+                        if (node.node != null) {
+                            node.node.sendToAddress("network.message", node.node.address(), message.data());
+                        }
+                    }
                 }
             }
         }
@@ -79,13 +134,10 @@ public class OCChannelSettings extends TraitedChannelSettings {
         componentNodes = null;
     }
 
-    private Node getNode(World world, BlockPos pos, EnumFacing side) {
-        TileEntity tile = world.getTileEntity(pos);
-        if(tile == null) {
+    private Node getNode(TileEntity tile, EnumFacing side) {
+        if (tile == null) {
             return null;
-        }
-
-        if (tile.hasCapability(SIDED_ENVIRONMENT_CAPABILITY, side)) {
+        } else if (tile.hasCapability(SIDED_ENVIRONMENT_CAPABILITY, side)) {
             return tile.getCapability(SIDED_ENVIRONMENT_CAPABILITY, side).sidedNode(side);
         } else if (tile.hasCapability(ENVIRONMENT_CAPABILITY, side)) {
             return tile.getCapability(ENVIRONMENT_CAPABILITY, side).node();
@@ -96,47 +148,57 @@ public class OCChannelSettings extends TraitedChannelSettings {
 
     @Override
     public void tick(int channel, IControllerContext context) {
-        if(componentNodes != null) { return; }
-        componentNodes = new HashSet<>();
-        networkNodes = new HashSet<>();
+        if (componentNodes == null) {
+            componentNodes = new ArrayList<>();
+            networkNodes = new ArrayList<>();
 
-        World world = context.getControllerWorld();
-        processConnectors(context, world, context.getConnectors(channel));
-        processConnectors(context, world, context.getRoutedConnectors(channel));
+            World world = context.getControllerWorld();
+            processConnectors(context, world, context.getConnectors(channel));
+            processConnectors(context, world, context.getRoutedConnectors(channel));
+            ticker = 0;
+        }
+
+        for (NodeEntry node : componentNodes) {
+            node.update(context.getControllerWorld(), context, ticker);
+        }
+
+        for (NodeEntry node : networkNodes) {
+            node.update(context.getControllerWorld(), context, ticker);
+        }
+
+        ticker = (ticker + 1) % 20;
     }
 
     private void processConnectors(IControllerContext context, World world, Map<SidedConsumer, IConnectorSettings> connectors) {
         for (Map.Entry<SidedConsumer, IConnectorSettings> entry : connectors.entrySet()) {
             OCConnectorSettings settings = (OCConnectorSettings) entry.getValue();
 
-            EnumFacing side = settings.getFacing();
             BlockPos pos = context.findConsumerPosition(entry.getKey().getConsumerId());
             pos = pos.offset(entry.getKey().getSide());
+            NodeEntry nodeEntry = new NodeEntry(settings, pos, settings.getFacing(), settings.networkMode.get());
 
-            Node node = getNode(world, pos, side);
-
-            if(node == null) { continue; }
-            if(settings.networkMode.get() == OCNetworkMode.COMPONENT_AND_NETWORK) {
-                if (!node.isNeighborOf(channelNode)) {
-                    node.connect(channelNode);
-                    componentNodes.add(node);
-                }
+            if (nodeEntry.mode.hasComponent()) {
+                componentNodes.add(nodeEntry);
             } else {
-                networkNodes.add(node);
+                networkNodes.add(nodeEntry);
             }
         }
     }
 
     @Override
     public void cleanCache() {
-        if(componentNodes == null) { return; }
+        if (componentNodes != null) {
+            for (NodeEntry node : componentNodes) {
+                node.remove();
+            }
 
-        for(Node node : componentNodes) {
-            node.disconnect(channelNode);
+            for (NodeEntry node : networkNodes) {
+                node.remove();
+            }
+
+            networkNodes = null;
+            componentNodes = null;
         }
-
-        networkNodes = null;
-        componentNodes = null;
     }
 
     @Override

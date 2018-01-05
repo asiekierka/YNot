@@ -71,7 +71,8 @@ public class OCConnectorSettings extends TraitedConnectorSettings {
     @Override
     public void createGui(IEditorGui gui) {
         advanced = gui.isAdvanced();
-        sideGui(gui);
         networkMode.apply("Components + Network or Network only.", gui);
+        sideGui(gui);
+        colorsGui(gui);
     }
 }

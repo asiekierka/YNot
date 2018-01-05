@@ -23,6 +23,14 @@ public enum OCNetworkMode {
     COMPONENT_AND_NETWORK,
     NETWORK_ONLY;
 
+    public boolean hasNetwork() {
+        return true;
+    }
+
+    public boolean hasComponent() {
+        return this == COMPONENT_AND_NETWORK;
+    }
+
     @Override
     public String toString() {
         return name().toLowerCase().replaceAll("_", " ");
