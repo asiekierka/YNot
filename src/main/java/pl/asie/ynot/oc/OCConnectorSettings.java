@@ -62,16 +62,16 @@ public class OCConnectorSettings extends TraitedConnectorSettings {
 
     @Override
     public boolean isEnabled(String tag) {
-        if (tag.equals(TAG_FACING)) {
+        /* if (tag.equals(TAG_FACING)) {
             return advanced;
-        }
+        } */
         return true;
     }
 
     @Override
     public void createGui(IEditorGui gui) {
-        advanced = gui.isAdvanced();
-        sideGui(gui);
+        /* advanced = gui.isAdvanced();
+        sideGui(gui); */
         networkMode.apply("Components + Network or Network only.", gui);
     }
 }
