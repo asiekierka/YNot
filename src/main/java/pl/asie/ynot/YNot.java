@@ -95,7 +95,6 @@ public class YNot {
 			if (enableOC) {
 				xNet.registerChannelType(new OCChannelType());
 				YNotConnectable.add(capOCEnv, capOCSidedEnv);
-				YNotConnectable.add(capOCEnv.getClass(), capOCSidedEnv.getClass());
 				needsCustomConnections = true;
 			}
 
