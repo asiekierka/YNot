@@ -16,10 +16,11 @@ import javax.annotation.Nullable;
 public class OCConnectorSettings extends TraitedConnectorSettings {
     TraitEnum<OCNetworkMode> networkMode;
 
+
     OCConnectorSettings(EnumFacing side) {
         super(side);
 
-        register(networkMode = new TraitEnum<>("mode", OCNetworkMode.class, OCNetworkMode.COMPONENT_AND_NETWORK));
+        register(networkMode = new TraitEnum<>("mode", OCNetworkMode.class, OCNetworkMode.NETWORK_ONLY));
     }
 
     @Nullable
