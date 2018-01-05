@@ -31,7 +31,6 @@ import mcjty.xnet.api.keys.SidedConsumer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
@@ -102,8 +101,9 @@ public class OCChannelSettings extends TraitedChannelSettings {
     private static Capability<SidedEnvironment> SIDED_ENVIRONMENT_CAPABILITY;
 
     Node channelNode;
-    List<NodeEntry> componentNodes;
-    List<NodeEntry> networkNodes;
+    Map<SidedConsumer, NodeEntry> componentNodes;
+    Map<SidedConsumer, NodeEntry> networkNodes;
+    boolean shouldCleanCache = true;
     int ticker;
 
     class DummyEnvironment extends AbstractManagedEnvironment {
@@ -115,12 +115,10 @@ public class OCChannelSettings extends TraitedChannelSettings {
         public void onMessage(Message message) {
             super.onMessage(message);
 
-            if(networkNodes != null) {
-                if (message.name().equals("network.message")) {
-                    for (NodeEntry node : networkNodes) {
-                        if (node.node != null) {
-                            node.node.sendToAddress("network.message", node.node.address(), message.data());
-                        }
+            if (message.name().equals("network.message")) {
+                for (NodeEntry node : networkNodes.values()) {
+                    if (node.node != null) {
+                        node.node.sendToAddress("network.message", node.node.address(), message.data());
                     }
                 }
             }
@@ -131,7 +129,8 @@ public class OCChannelSettings extends TraitedChannelSettings {
         super();
 
         channelNode = new DummyEnvironment().node();
-        componentNodes = null;
+        componentNodes = new LinkedHashMap<>();
+        networkNodes = new LinkedHashMap<>();
     }
 
     private Node getNode(TileEntity tile, EnumFacing side) {
@@ -146,59 +145,76 @@ public class OCChannelSettings extends TraitedChannelSettings {
         }
     }
 
+    private void removeNotPresent(Map<SidedConsumer, NodeEntry> entries, Map<SidedConsumer, IConnectorSettings> connectors, Map<SidedConsumer, IConnectorSettings> routedConnectors) {
+        Iterator<SidedConsumer> it = entries.keySet().iterator();
+        while (it.hasNext()) {
+            SidedConsumer consumer = it.next();
+            if (!connectors.containsKey(consumer) && !routedConnectors.containsKey(consumer)) {
+                entries.get(consumer).remove();
+                it.remove();
+            }
+        }
+    }
+
     @Override
     public void tick(int channel, IControllerContext context) {
-        if (componentNodes == null) {
-            componentNodes = new ArrayList<>();
-            networkNodes = new ArrayList<>();
+        if (shouldCleanCache) {
+            Map<SidedConsumer, IConnectorSettings> connectors = context.getConnectors(channel);
+            Map<SidedConsumer, IConnectorSettings> routedConnectors = context.getRoutedConnectors(channel);
+
+            removeNotPresent(componentNodes, connectors, routedConnectors);
+            removeNotPresent(networkNodes, connectors, routedConnectors);
 
             World world = context.getControllerWorld();
-            processConnectors(context, world, context.getConnectors(channel));
-            processConnectors(context, world, context.getRoutedConnectors(channel));
+            addNewConnectors(context, world, connectors);
+            addNewConnectors(context, world, routedConnectors);
             ticker = 0;
+            shouldCleanCache = false;
         }
 
-        for (NodeEntry node : componentNodes) {
+        for (NodeEntry node : componentNodes.values()) {
             node.update(context.getControllerWorld(), context, ticker);
         }
 
-        for (NodeEntry node : networkNodes) {
+        for (NodeEntry node : networkNodes.values()) {
             node.update(context.getControllerWorld(), context, ticker);
         }
 
         ticker = (ticker + 1) % 20;
     }
 
-    private void processConnectors(IControllerContext context, World world, Map<SidedConsumer, IConnectorSettings> connectors) {
+    private void addNewConnectors(IControllerContext context, World world, Map<SidedConsumer, IConnectorSettings> connectors) {
         for (Map.Entry<SidedConsumer, IConnectorSettings> entry : connectors.entrySet()) {
             OCConnectorSettings settings = (OCConnectorSettings) entry.getValue();
+            NodeEntry oldEntry = componentNodes.get(entry.getKey());
+            if (oldEntry == null) {
+                oldEntry = networkNodes.get(entry.getKey());
+            }
 
-            BlockPos pos = context.findConsumerPosition(entry.getKey().getConsumerId());
-            pos = pos.offset(entry.getKey().getSide());
-            NodeEntry nodeEntry = new NodeEntry(settings, pos, settings.getFacing(), settings.networkMode.get());
+            if (oldEntry != null && (oldEntry.mode != settings.networkMode.get() || oldEntry.facing != settings.getFacing())) {
+                oldEntry.remove();
+                componentNodes.remove(entry.getKey());
+                networkNodes.remove(entry.getKey());
+                oldEntry = null;
+            }
 
-            if (nodeEntry.mode.hasComponent()) {
-                componentNodes.add(nodeEntry);
-            } else {
-                networkNodes.add(nodeEntry);
+            if (oldEntry == null) {
+                BlockPos pos = context.findConsumerPosition(entry.getKey().getConsumerId());
+                pos = pos.offset(entry.getKey().getSide());
+                NodeEntry nodeEntry = new NodeEntry(settings, pos, settings.getFacing(), settings.networkMode.get());
+
+                if (nodeEntry.mode.hasComponent()) {
+                    componentNodes.put(entry.getKey(), nodeEntry);
+                } else {
+                    networkNodes.put(entry.getKey(), nodeEntry);
+                }
             }
         }
     }
 
     @Override
     public void cleanCache() {
-        if (componentNodes != null) {
-            for (NodeEntry node : componentNodes) {
-                node.remove();
-            }
-
-            for (NodeEntry node : networkNodes) {
-                node.remove();
-            }
-
-            networkNodes = null;
-            componentNodes = null;
-        }
+        shouldCleanCache = true;
     }
 
     @Override
