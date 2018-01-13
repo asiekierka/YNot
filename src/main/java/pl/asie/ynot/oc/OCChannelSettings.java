@@ -49,18 +49,25 @@ public class OCChannelSettings extends TraitedChannelSettings {
         private final OCNetworkMode mode;
         private TileEntity tile;
         private Node node;
+        private Environment env;
 
         public NodeEntry(OCConnectorSettings settings, BlockPos pos, EnumFacing facing, OCNetworkMode mode) {
             this.settings = settings;
             this.pos = pos;
             this.facing = facing;
             this.mode = mode;
+
+            if (mode.hasNetwork() && !mode.hasComponent()) {
+                this.env = new DummyEnvironment(false);
+            }
         }
 
         public void remove() {
             if (node != null) {
                 if (mode.hasComponent()) {
                     node.disconnect(channelNode);
+                } else if (mode.hasNetwork()) {
+                    node.disconnect(env.node());
                 }
 
                 tile = null;
@@ -87,6 +94,10 @@ public class OCChannelSettings extends TraitedChannelSettings {
                             if (!node.isNeighborOf(channelNode)) {
                                 node.connect(channelNode);
                             }
+                        } else if(mode.hasNetwork() && env != null) {
+                            if (!node.isNeighborOf(env.node())) {
+                                node.connect(env.node());
+                            }
                         }
                     }
                 }
@@ -107,7 +118,11 @@ public class OCChannelSettings extends TraitedChannelSettings {
     int ticker;
 
     class DummyEnvironment extends AbstractManagedEnvironment {
-        DummyEnvironment() {
+        boolean isChannel;
+
+        DummyEnvironment(boolean isChannel) {
+            this.isChannel = isChannel;
+
             this.setNode(Network.newNode(this, Visibility.Network).create());
         }
 
@@ -117,9 +132,13 @@ public class OCChannelSettings extends TraitedChannelSettings {
 
             if (message.name().equals("network.message")) {
                 for (NodeEntry node : networkNodes.values()) {
-                    if (node.node != null) {
-                        node.node.sendToAddress("network.message", node.node.address(), message.data());
+                    if (node.env != null && !equals(node.env)) {
+                        node.env.node().sendToReachable("network.message", message.data());
                     }
+                }
+
+                if(!isChannel) {
+                    channelNode.sendToReachable("network.message", message.data());
                 }
             }
         }
@@ -128,7 +147,7 @@ public class OCChannelSettings extends TraitedChannelSettings {
     public OCChannelSettings() {
         super();
 
-        channelNode = new DummyEnvironment().node();
+        channelNode = new DummyEnvironment(true).node();
         componentNodes = new LinkedHashMap<>();
         networkNodes = new LinkedHashMap<>();
     }
