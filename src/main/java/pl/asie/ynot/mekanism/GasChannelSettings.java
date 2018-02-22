@@ -113,7 +113,7 @@ public class GasChannelSettings extends TraitedChannelSettings {
 			if (extractorPos != null) {
 				EnumFacing side = entry.getKey().getSide();
 				BlockPos pos = extractorPos.offset(side);
-				if (!shouldCheck(context, pos, settings)) {
+				if (!shouldCheck(context, pos, extractorPos, settings)) {
 					continue;
 				}
 
@@ -184,9 +184,9 @@ public class GasChannelSettings extends TraitedChannelSettings {
 			GasConnectorSettings settings = entry.getValue();
 
 			BlockPos consumerPos = context.findConsumerPosition(entry.getKey().getConsumerId());
-			if (consumerPos != null && shouldCheck(context, consumerPos, entry.getValue())) {
-				EnumFacing side = entry.getKey().getSide();
-				BlockPos pos = consumerPos.offset(side);
+			EnumFacing side = entry.getKey().getSide();
+			BlockPos pos = consumerPos.offset(side);
+			if (consumerPos != null && shouldCheck(context, pos, consumerPos, entry.getValue())) {
 				IGasHandler handler = getGasHandler(world.getTileEntity(pos), settings.getFacing());
 				if (handler != null) {
 					if (!handler.canReceiveGas(settings.getFacing(), stack.getGas())) {

@@ -65,12 +65,12 @@ public abstract class TraitedChannelSettings extends DefaultChannelSettings impl
 		}
 	}
 
-	protected boolean shouldCheck(IControllerContext context, BlockPos pos, AbstractConnectorSettings settings) {
+	protected boolean shouldCheck(IControllerContext context, BlockPos pos, BlockPos extractorPos, AbstractConnectorSettings settings) {
 		World world = context.getControllerWorld();
 		if (!WorldTools.chunkLoaded(world, pos)) {
 			return false;
 		}
-		if (checkRedstone(world, settings, pos)) {
+		if (checkRedstone(world, settings, extractorPos)) {
 			return false;
 		}
 		if (!context.matchColor(settings.getColorsMask())) {

@@ -60,7 +60,7 @@ public class FlamingoChannelSettings extends TraitedChannelSettings {
 			if (extractorPos != null) {
 				EnumFacing side = entry.getKey().getSide();
 				BlockPos pos = extractorPos.offset(side);
-				if (!shouldCheck(context, pos, entry.getValue())) {
+				if (!shouldCheck(context, pos, extractorPos, entry.getValue())) {
 					continue;
 				}
 
@@ -90,7 +90,7 @@ public class FlamingoChannelSettings extends TraitedChannelSettings {
 						return null;
 					}
 
-					if (!shouldCheck(context, pos, entry.getValue())) {
+					if (!shouldCheck(context, pos, extractorPos, entry.getValue())) {
 						return null;
 					}
 
