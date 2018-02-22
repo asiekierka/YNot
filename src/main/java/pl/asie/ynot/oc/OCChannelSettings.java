@@ -130,6 +130,11 @@ public class OCChannelSettings extends TraitedChannelSettings {
         public void onMessage(Message message) {
             super.onMessage(message);
 
+            if (message.source().host() instanceof  DummyEnvironment) {
+                return;
+            }
+
+
             if (message.name().equals("network.message")) {
                 for (NodeEntry node : networkNodes.values()) {
                     if (node.env != null && !equals(node.env)) {
