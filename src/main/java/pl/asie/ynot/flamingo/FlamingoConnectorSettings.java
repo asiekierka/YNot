@@ -44,10 +44,10 @@ public class FlamingoConnectorSettings extends TraitedConnectorSettings {
 	public IndicatorIcon getIndicatorIcon() {
 		switch (insertionMode.get()) {
 			case INS:
-				return new IndicatorIcon(GuiController.iconGuiElements, 0, 70, 13, 10);
+				return new IndicatorIcon(iconXnetGuiElements, 0, 70, 13, 10);
 			case EXT:
 			default:
-				return new IndicatorIcon(GuiController.iconGuiElements, 13, 70, 13, 10);
+				return new IndicatorIcon(iconXnetGuiElements, 13, 70, 13, 10);
 		}
 	}
 
