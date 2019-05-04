@@ -22,6 +22,7 @@ package pl.asie.ynot.traits;
 import mcjty.xnet.api.helper.AbstractConnectorSettings;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -29,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class TraitedConnectorSettings extends AbstractConnectorSettings {
+	public static final ResourceLocation iconXnetGuiElements = new ResourceLocation("xnet", "textures/gui/guielements.png");
+
 	private final List<Trait> traits = new ArrayList<>();
 
 	public TraitedConnectorSettings(@Nonnull EnumFacing side) {

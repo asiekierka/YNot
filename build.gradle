@@ -22,7 +22,7 @@ apply plugin: 'net.minecrell.licenser'
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
-version = "0.2.2"
+version = "0.2.4"
 group = "pl.asie.ynot"
 archivesBaseName = "YNot"
 
@@ -38,12 +38,12 @@ dependencies {
 }
 
 minecraft {
-	version = "1.12.2-14.23.1.2583"
+	version = "1.12.2-14.23.4.2708"
 
 	runDir = "run"
+    mappings = "stable_39"
 	useDepAts = true
 	makeObfSourceJar = false
-	mappings = "snapshot_20180103"
 
 	replace '@VERSION@', project.version
 	replace '@MC_VERSION@', version
@@ -78,8 +78,8 @@ license {
 }
 
 dependencies {
-	deobfCompile "com.github.mcjty:xnet:1.12-1.6.6"
-	deobfCompile "com.github.mcjty:mcjtylib:1.12-2.6.2-SNAPSHOT"
+	deobfCompile "com.github.mcjty:xnet:1.12-1.8.0"
+	deobfCompile "com.github.mcjty:mcjtylib:1.12-3.5.0"
 	deobfCompile "li.cil.oc:OpenComputers:MC1.12-1.7.+:api"
 	deobfCompile "li.cil.tis3d:TIS-3D:MC1.12-1.3.+:api"
 	deobfCompile name: "Mekanism", version: "1.12.2-9.4.2.328"
