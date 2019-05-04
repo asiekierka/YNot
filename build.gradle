@@ -41,9 +41,9 @@ minecraft {
 	version = "1.12.2-14.23.4.2708"
 
 	runDir = "run"
+    mappings = "stable_39"
 	useDepAts = true
 	makeObfSourceJar = false
-	mappings = "snapshot_20180616"
 
 	replace '@VERSION@', project.version
 	replace '@MC_VERSION@', version
