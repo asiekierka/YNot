@@ -26,7 +26,7 @@ import mcjty.xnet.api.gui.IEditorGui;
 import mcjty.xnet.api.gui.IndicatorIcon;
 import mcjty.xnet.api.keys.SidedConsumer;
 import mcjty.xnet.blocks.controller.gui.GuiController;
-import mcjty.xnet.config.GeneralConfiguration;
+import mcjty.xnet.config.ConfigSetup;
 import mekanism.api.gas.GasStack;
 import mekanism.api.gas.IGasHandler;
 import net.minecraft.nbt.NBTTagCompound;
@@ -129,7 +129,7 @@ public class GasChannelSettings extends TraitedChannelSettings {
 						List<Triple<SidedConsumer, GasConnectorSettings, Integer>> inserted = new ArrayList<>();
 						int remaining = insertGasSimulate(inserted, context, gas);
 						if (!inserted.isEmpty()) {
-							if (context.checkAndConsumeRF(GeneralConfiguration.controllerOperationRFT)) {
+							if (context.checkAndConsumeRF(ConfigSetup.controllerOperationRFT.get())) {
 								gas = handler.drawGas(settings.getFacing(), gas.amount - remaining, true);
 								insertGasReal(context, inserted, gas);
 							}
