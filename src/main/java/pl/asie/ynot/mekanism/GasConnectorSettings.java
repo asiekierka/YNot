@@ -22,8 +22,6 @@ package pl.asie.ynot.mekanism;
 import com.google.common.collect.ImmutableSet;
 import mcjty.xnet.api.gui.IEditorGui;
 import mcjty.xnet.api.gui.IndicatorIcon;
-import mcjty.xnet.blocks.controller.gui.GuiController;
-import mcjty.xnet.config.GeneralConfiguration;
 import mekanism.api.gas.GasStack;
 import mekanism.api.gas.IGasItem;
 import net.minecraft.item.ItemStack;
@@ -88,10 +86,10 @@ public class GasConnectorSettings extends TraitedConnectorSettings {
 	public IndicatorIcon getIndicatorIcon() {
 		switch (insertionMode.get()) {
 			case INS:
-				return new IndicatorIcon(GuiController.iconGuiElements, 0, 70, 13, 10);
+				return new IndicatorIcon(iconXnetGuiElements, 0, 70, 13, 10);
 			case EXT:
 			default:
-				return new IndicatorIcon(GuiController.iconGuiElements, 13, 70, 13, 10);
+				return new IndicatorIcon(iconXnetGuiElements, 13, 70, 13, 10);
 		}
 	}
 
